@@ -3,7 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "scrape": "node src/cli.ts",
+    "scrape": "node --env-file=../.env src/cli.ts",
+    "embed": "node --env-file=../.env src/embed.ts",
+    "search": "node --env-file=../.env src/search.ts",
     "test": "node --test"
   },
   "dependencies": {

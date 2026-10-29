@@ -27,6 +27,8 @@ async function upsert(db: pg.Client, c: Course): Promise<"inserted" | "updated" 
      on conflict (source_url) do update set ${updates}, scraped_at = now()`,
     values,
   );
+  // Content changed: drop stale chunks so the next embed run rebuilds them.
+  await db.query("delete from course_chunks where course_id = (select id from courses where source_url = $1)", [c.source_url]);
   return existing.rows.length ? "updated" : "inserted";
 }
 
