@@ -22,16 +22,16 @@ export default function ConversationCard({ conv, active, onClick }: { conv: Conv
       <div className="min-w-0 flex-1 space-y-1.5">
         <div className="flex items-baseline justify-between gap-2">
           <span className="truncate font-semibold">{conv.contact?.name ?? "Sin nombre"}</span>
-          <span className="shrink-0 text-xs text-slate-500">{timeAgo(conv.last_message_at)}</span>
+          <span className="shrink-0 text-xs text-slate-600">{timeAgo(conv.last_message_at)}</span>
         </div>
         <p className="truncate text-sm text-slate-600">{conv.last_message ? `${who}${conv.last_message.content}` : "Sin mensajes todavía"}</p>
         <Thermometer value={conv.sentiment} />
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
           <SentimentBadge value={conv.sentiment} />
           {conv.ai_paused ? (
-            <span className="rounded-full bg-ink px-2 py-0.5 text-xs font-medium text-white">Atiende una persona</span>
+            <span className="shrink-0 whitespace-nowrap rounded-full bg-ink px-2 py-0.5 text-xs font-medium text-white">Atiende una persona</span>
           ) : (
-            <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs font-medium text-brand-dark">Atiende la IA</span>
+            <span className="shrink-0 whitespace-nowrap rounded-full bg-brand-soft px-2 py-0.5 text-xs font-medium text-brand-dark">Atiende la IA</span>
           )}
         </div>
       </div>

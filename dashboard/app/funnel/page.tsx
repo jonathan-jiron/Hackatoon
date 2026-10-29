@@ -12,7 +12,7 @@ function Stat({ label, value, hint }: { label: string; value: string | number; h
     <div className="rounded-xl border bg-white p-4">
       <div className="text-sm text-slate-600">{label}</div>
       <div className="text-3xl font-semibold tabular-nums">{value}</div>
-      <div className="text-xs text-slate-500">{hint}</div>
+      <div className="text-xs text-slate-600">{hint}</div>
     </div>
   );
 }
@@ -47,7 +47,7 @@ export default function SalesPage() {
         <Stat label="Inscritos" value={enrolled} hint={`${rate}% de los interesados`} />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid items-start gap-4 lg:grid-cols-2">
         <section className="rounded-xl border bg-white p-5">
           <h2 className="font-semibold">Etapas de la venta</h2>
           <p className="mb-4 text-sm text-slate-600">Pasa el cursor por una etapa para ver qué significa.</p>
@@ -78,7 +78,7 @@ export default function SalesPage() {
                 <Avatar name={l.contact_name ?? null} />
                 <div className="min-w-0 flex-1">
                   <div className="truncate font-medium">{l.contact_name ?? "Sin nombre"}</div>
-                  <div className="truncate text-sm text-slate-500">
+                  <div className="truncate text-sm text-slate-600">
                     {l.course_title ?? "Curso por definir"} · {STAGE_LABEL[l.stage]} · {timeAgo(l.updated_at)}
                   </div>
                 </div>

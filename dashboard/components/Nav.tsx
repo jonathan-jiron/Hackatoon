@@ -21,7 +21,7 @@ function Status() {
     return () => clearInterval(t);
   }, []);
 
-  if (status === "loading") return <span className="text-sm text-slate-500">Conectando...</span>;
+  if (status === "loading") return <span className="text-sm text-slate-600">Conectando...</span>;
   if (status === "demo")
     return <span className="rounded-full bg-amber-100 px-3 py-1 text-sm text-amber-800">Datos de ejemplo</span>;
   if (status === "error")
@@ -69,9 +69,16 @@ export default function Nav() {
     <>
       <header className="border-b bg-white">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
-          <div className="leading-tight">
-            <div className="font-semibold text-brand-dark">CTT FISEI</div>
-            <div className="text-xs text-slate-500">Panel de ventas</div>
+          <div className="flex items-center gap-2.5 leading-tight">
+            {/* Mark: a chat bubble, since this product is a sales conversation. */}
+            <svg aria-hidden viewBox="0 0 24 24" className="h-7 w-7 text-brand" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H11l-4.5 4v-4h0A2.5 2.5 0 0 1 4 13.5z" />
+              <path d="m9 9.5 2 2 4-4" />
+            </svg>
+            <div>
+              <div className="font-semibold text-brand-dark">CTT FISEI</div>
+              <div className="text-xs text-slate-600">Panel de ventas</div>
+            </div>
           </div>
           <nav aria-label="Secciones" className="flex gap-1 text-sm">
             {links.map((l) => (
@@ -87,7 +94,7 @@ export default function Nav() {
           </nav>
           <div className="ml-auto flex items-center gap-3">
             {attention > 0 && (
-              <span className="hidden rounded-full bg-fuchsia-50 px-3 py-1 text-sm font-medium text-fuchsia-800 md:inline">
+              <span className="hidden rounded-full bg-orange-50 px-3 py-1 text-sm font-medium text-orange-800 md:inline">
                 {attention} {attention === 1 ? "chat necesita" : "chats necesitan"} atención
               </span>
             )}

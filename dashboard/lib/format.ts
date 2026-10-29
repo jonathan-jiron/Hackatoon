@@ -45,7 +45,7 @@ export const SENTIMENT_META: Record<
   },
   doubtful: {
     label: "Con dudas", hint: "Duda del precio, del tiempo o del certificado.",
-    dot: "bg-amber-500", text: "text-amber-800", bg: "bg-amber-50", bar: "w-3/5 bg-amber-500", ring: "ring-amber-200",
+    dot: "bg-sky-500", text: "text-sky-800", bg: "bg-sky-50", bar: "w-3/5 bg-sky-500", ring: "ring-sky-200",
   },
   frustrated: {
     label: "Molesto", hint: "Está incómodo. Conviene que una persona le responda.",
@@ -53,7 +53,7 @@ export const SENTIMENT_META: Record<
   },
   hot_lead: {
     label: "Listo para comprar", hint: "Quiere inscribirse. Es buen momento para cerrar.",
-    dot: "bg-fuchsia-600", text: "text-fuchsia-800", bg: "bg-fuchsia-50", bar: "w-full bg-fuchsia-600", ring: "ring-fuchsia-200",
+    dot: "bg-orange-600", text: "text-orange-800", bg: "bg-orange-50", bar: "w-full bg-orange-600", ring: "ring-orange-200",
   },
 };
 

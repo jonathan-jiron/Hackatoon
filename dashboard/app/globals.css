@@ -6,6 +6,7 @@ body {
   @apply bg-paper font-sans text-ink antialiased;
   font-size: 15px;
   line-height: 1.5;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Heuristic 7 and accessibility: keyboard focus is always visible. */

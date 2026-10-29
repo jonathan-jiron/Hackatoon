@@ -57,7 +57,7 @@ export default function InboxPage() {
       <section aria-label={title} className="space-y-2">
         <div>
           <h2 className="text-sm font-semibold">{title}</h2>
-          <p className="text-xs text-slate-500">{hint}</p>
+          <p className="text-xs text-slate-600">{hint}</p>
         </div>
         {items.map((c) => (
           <ConversationCard key={c.id} conv={c} active={c.id === selectedId} onClick={() => select(c.id)} />
@@ -66,11 +66,12 @@ export default function InboxPage() {
     );
 
   return (
-    <div className="grid gap-4 md:grid-cols-[380px_1fr]">
-      <aside className={`space-y-3 ${selectedId ? "hidden md:block" : ""}`}>
+    // minmax(0, …) lets long message previews truncate instead of widening the page on phones.
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-[380px_minmax(0,1fr)]">
+      <aside className={`min-w-0 space-y-3 ${selectedId ? "hidden md:block" : ""}`}>
         <div className="flex items-baseline justify-between">
           <h1 className="text-lg font-semibold">Conversaciones</h1>
-          <span className="text-sm text-slate-500">{conversations.length} en total</span>
+          <span className="text-sm text-slate-600">{conversations.length} en total</span>
         </div>
 
         <div className="relative">
@@ -83,11 +84,11 @@ export default function InboxPage() {
             className="w-full rounded-lg border bg-white px-3 py-2 pr-16 outline-none focus:border-brand"
           />
           {q ? (
-            <button onClick={() => setQ("")} className="absolute right-2 top-1/2 -translate-y-1/2 rounded px-2 py-1 text-xs text-slate-500 hover:bg-slate-100" aria-label="Borrar búsqueda">
+            <button onClick={() => setQ("")} className="absolute right-2 top-1/2 -translate-y-1/2 rounded px-2 py-1 text-xs text-slate-600 hover:bg-slate-100" aria-label="Borrar búsqueda">
               Borrar
             </button>
           ) : (
-            <kbd className="absolute right-3 top-1/2 -translate-y-1/2 rounded border bg-slate-50 px-1.5 text-xs text-slate-500">/</kbd>
+            <kbd className="absolute right-3 top-1/2 -translate-y-1/2 rounded border bg-slate-50 px-1.5 text-xs text-slate-600">/</kbd>
           )}
         </div>
 
@@ -149,14 +150,31 @@ export default function InboxPage() {
       {selectedId ? (
         <Transcript id={selectedId} />
       ) : (
-        <div className="hidden place-items-center rounded-xl border border-dashed bg-white p-10 text-center md:grid">
-          <div className="max-w-sm space-y-2">
-            <p className="text-lg font-semibold">Elige un chat para empezar</p>
+        <div className="hidden self-start rounded-xl border border-dashed bg-white p-8 md:block">
+          <div className="max-w-md space-y-2">
+            <p className="text-lg font-semibold">{urgent.length ? "Responde primero a estos chats" : "Elige un chat para empezar"}</p>
             <p className="text-sm text-slate-600">
-              Verás la conversación completa y podrás tomar el control cuando quieras. Empieza por los que dicen <b>Necesitan atención</b>.
+              {urgent.length
+                ? "Quieren inscribirse o están molestos. Un clic abre la conversación y te deja tomar el control."
+                : "Verás la conversación completa y podrás tomar el control cuando quieras."}
             </p>
-            <p className="text-xs text-slate-500">Consejo: usa ↑ ↓ para moverte entre chats.</p>
           </div>
+          {urgent.length > 0 && (
+            <ul className="mt-4 max-w-md space-y-2">
+              {urgent.slice(0, 4).map((c) => (
+                <li key={c.id}>
+                  <button
+                    onClick={() => select(c.id)}
+                    className="flex w-full items-center justify-between gap-3 rounded-lg border bg-white px-3 py-2 text-left text-sm hover:border-slate-400"
+                  >
+                    <span className="min-w-0 truncate font-medium">{c.contact?.name ?? "Sin nombre"}</span>
+                    <span className="shrink-0 text-slate-600">{SENTIMENT_META[c.sentiment ?? "interested"].label} · Abrir</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="mt-4 text-xs text-slate-600">Consejo: usa ↑ ↓ para moverte entre chats.</p>
         </div>
       )}
     </div>

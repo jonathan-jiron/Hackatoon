@@ -90,7 +90,7 @@ export default function Transcript({ id }: { id: string }) {
           <Avatar name={conv.contact?.name ?? null} size="lg" />
           <div className="min-w-0 flex-1">
             <h2 className="truncate text-lg font-semibold leading-tight">{conv.contact?.name ?? "Sin nombre"}</h2>
-            <p className="truncate text-sm text-slate-500">
+            <p className="truncate text-sm text-slate-600">
               {[
                 CHANNEL_LABEL[conv.contact?.channel ?? ""],
                 conv.contact?.audience_type ? AUDIENCE_LABEL[conv.contact.audience_type] : "Perfil sin confirmar",
@@ -102,7 +102,7 @@ export default function Transcript({ id }: { id: string }) {
           </div>
           <div className="hidden flex-col items-end gap-1 sm:flex">
             <SentimentBadge value={conv.sentiment} />
-            {conv.stage && <span className="text-xs text-slate-500">{STAGE_LABEL[conv.stage] ?? conv.stage}</span>}
+            {conv.stage && <span className="text-xs text-slate-600">{STAGE_LABEL[conv.stage] ?? conv.stage}</span>}
           </div>
         </div>
 
@@ -152,10 +152,10 @@ export default function Transcript({ id }: { id: string }) {
       </header>
 
       <div className="flex flex-1 flex-col gap-2.5 overflow-y-auto bg-paper p-4" aria-live="polite">
-        {list.length === 0 && <p className="m-auto text-sm text-slate-500">Todavía no hay mensajes en este chat.</p>}
+        {list.length === 0 && <p className="m-auto text-sm text-slate-600">Todavía no hay mensajes en este chat.</p>}
         {list.map((m) => (
           <div key={m.id} className={`max-w-[80%] rounded-2xl px-3.5 py-2 ${bubble[m.role]}`}>
-            <div className={`mb-0.5 flex items-center gap-2 text-xs ${m.role === "operator" ? "text-white/70" : "text-slate-500"}`}>
+            <div className={`mb-0.5 flex items-center gap-2 text-xs ${m.role === "operator" ? "text-white/70" : "text-slate-600"}`}>
               <span className="font-medium">{roleLabel[m.role]}</span>
               {m.media_type === "audio" && (
                 <span className="inline-flex items-center gap-1">
@@ -216,7 +216,7 @@ export default function Transcript({ id }: { id: string }) {
             {busy ? "Enviando..." : "Enviar"}
           </button>
         </div>
-        <p className="flex justify-between text-xs text-slate-500">
+        <p className="flex justify-between text-xs text-slate-600">
           <span>{paused ? "La IA ya está en pausa." : "Al enviar, la IA se pone en pausa en este chat."} Enter envía, Shift + Enter hace un salto de línea.</span>
           {text.length > MAX - 150 && <span>{text.length}/{MAX}</span>}
         </p>

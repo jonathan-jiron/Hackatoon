@@ -40,7 +40,7 @@ export default function HelpDialog({ open, onClose }: { open: boolean; onClose: 
       >
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold">Cómo leer este panel</h2>
-          <button onClick={onClose} className="rounded-md px-2 py-1 text-slate-500 hover:bg-slate-100" aria-label="Cerrar ayuda">
+          <button onClick={onClose} className="rounded-md px-2 py-1 text-slate-600 hover:bg-slate-100" aria-label="Cerrar ayuda">
             <CloseIcon />
           </button>
         </div>

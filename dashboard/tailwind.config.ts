@@ -10,7 +10,7 @@ const config: Config = {
         brand: { DEFAULT: "#3355E8", dark: "#2441C4", soft: "#EAEFFF" },
       },
       fontFamily: {
-        sans: ['"Segoe UI"', "system-ui", "-apple-system", "Roboto", "sans-serif"],
+        sans: ["var(--font-inter)", '"Segoe UI"', "system-ui", "-apple-system", "Roboto", "sans-serif"],
       },
     },
   },
