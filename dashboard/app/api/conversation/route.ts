@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
       try {
         const r = await fetch(hook, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "x-operator-key": process.env.N8N_SEND_WEBHOOK_KEY ?? "" },
           body: JSON.stringify({
             conversation_id: id,
             channel: rows[0].channel,

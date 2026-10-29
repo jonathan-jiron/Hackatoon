@@ -33,6 +33,7 @@ services:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET}
       AGENT_API_KEY: ${AGENT_API_KEY}
+      OPERATOR_SEND_KEY: ${OPERATOR_SEND_KEY}
       AGENT_URL: ${AGENT_URL:-http://host.docker.internal:3001}
     volumes:
       - n8n_data:/home/node/.n8n
