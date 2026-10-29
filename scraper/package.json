@@ -1,0 +1,13 @@
+{
+  "name": "ctt-scraper",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "scrape": "node src/cli.ts",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "cheerio": "1.0.0",
+    "pg": "8.13.1"
+  }
+}
