@@ -69,6 +69,9 @@ export interface Course {
   slug: string;
   title: string;
   start_date: string | null;
+  enrollment_end?: string | null;
+  hours?: number | null;
+  max_seats?: number | null;
   price_uta_student: number | null;
   price_uta_grad_staff: number | null;
   price_public: number | null;

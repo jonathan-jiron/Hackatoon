@@ -51,7 +51,7 @@ export async function getSnapshot(): Promise<Snapshot> {
       order by l.updated_at desc
     `),
     pool.query(`
-      select id, slug, title, start_date, modality, scraped_at,
+      select id, slug, title, start_date, enrollment_end, hours, max_seats, modality, scraped_at,
              price_uta_student::float8 as price_uta_student,
              price_uta_grad_staff::float8 as price_uta_grad_staff,
              price_public::float8 as price_public

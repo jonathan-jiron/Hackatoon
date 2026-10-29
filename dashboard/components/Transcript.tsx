@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { AUDIENCE_LABEL, CHANNEL_LABEL, clock } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import Avatar from "./Avatar";
@@ -21,6 +21,14 @@ const bubble = {
   operator: "self-end bg-ink text-white",
 } as const;
 const roleLabel = { user: "", assistant: "IA · ", operator: "Tú · " } as const;
+
+function dayLabel(iso: string) {
+  const d = new Date(iso);
+  const days = Math.round((new Date().setHours(0, 0, 0, 0) - new Date(d).setHours(0, 0, 0, 0)) / 86400000);
+  if (days === 0) return "Hoy";
+  if (days === 1) return "Ayer";
+  return d.toLocaleDateString("es-EC", { weekday: "long", day: "numeric", month: "long" });
+}
 
 // Older messages may carry Markdown the channel never rendered; show them as the customer saw them.
 const plain = (s: string) => s.replace(/\*\*(.+?)\*\*/g, "$1").replace(/^#+\s*/gm, "");
@@ -150,16 +158,30 @@ export default function Transcript({ id }: { id: string }) {
 
       <div className="flex flex-1 flex-col gap-2 overflow-y-auto bg-paper p-4" aria-live="polite">
         {list.length === 0 && <p className="m-auto text-sm text-slate-600">Todavía no hay mensajes en este chat.</p>}
-        {list.map((m) => (
-          <div key={m.id} className={`max-w-[80%] rounded-2xl px-3.5 py-2 ${bubble[m.role]}`}>
-            <p className="whitespace-pre-wrap">{plain(m.content)}</p>
-            <p className={`mt-0.5 flex items-center gap-1 text-xs ${m.role === "operator" ? "text-white/70" : "text-slate-600"}`}>
-              {m.media_type === "audio" && <MicIcon className="h-3 w-3" aria-label="audio transcrito" />}
-              {roleLabel[m.role]}
-              {clock(m.created_at)}
-            </p>
-          </div>
-        ))}
+        {list.map((m, i) => {
+          const prev = list[i - 1];
+          const next = list[i + 1];
+          const day = dayLabel(m.created_at);
+          const newDay = !prev || dayLabel(prev.created_at) !== day;
+          // Messages from the same speaker group together; the time shows once, under the last one.
+          const tight = !newDay && prev?.role === m.role;
+          const lastOfGroup = !next || next.role !== m.role || dayLabel(next.created_at) !== day;
+          return (
+            <Fragment key={m.id}>
+              {newDay && <div className="my-1 text-center text-xs font-medium text-slate-600">{day}</div>}
+              <div className={`max-w-[80%] rounded-2xl px-3.5 py-2 ${bubble[m.role]} ${tight ? "-mt-1" : ""}`}>
+                <p className="whitespace-pre-wrap">{plain(m.content)}</p>
+                {(lastOfGroup || m.media_type === "audio") && (
+                  <p className={`mt-0.5 flex items-center gap-1 text-xs ${m.role === "operator" ? "text-white/70" : "text-slate-600"}`}>
+                    {m.media_type === "audio" && <MicIcon className="h-3 w-3" aria-label="audio transcrito" />}
+                    {roleLabel[m.role]}
+                    {clock(m.created_at)}
+                  </p>
+                )}
+              </div>
+            </Fragment>
+          );
+        })}
         <div ref={bottom} />
       </div>
 

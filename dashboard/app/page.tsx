@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import ConversationCard from "@/components/ConversationCard";
+import ConversationCard, { awaitsReply } from "@/components/ConversationCard";
 import Transcript from "@/components/Transcript";
 import { SentimentIcon } from "@/components/Icons";
 import { SENTIMENT_META, SENTIMENT_ORDER } from "@/lib/format";
@@ -98,7 +98,7 @@ export default function InboxPage() {
           <button
             onClick={() => setFilter("all")}
             aria-pressed={filter === "all"}
-            className={`rounded-full border px-3 py-1 text-sm ${filter === "all" ? "border-ink bg-ink text-white" : "bg-white hover:border-slate-400"}`}
+            className={`shrink-0 whitespace-nowrap rounded-full border px-2.5 py-1 text-[13px] ${filter === "all" ? "border-ink bg-ink text-white" : "bg-white hover:border-slate-400"}`}
           >
             Todos
           </button>
@@ -109,7 +109,7 @@ export default function InboxPage() {
               onClick={() => setFilter(filter === s ? "all" : s)}
               aria-pressed={filter === s}
               title={SENTIMENT_META[s].hint}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm ${filter === s ? "border-ink bg-ink text-white" : "bg-white hover:border-slate-400"}`}
+              className={`inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-2.5 py-1 text-[13px] ${filter === s ? "border-ink bg-ink text-white" : "bg-white hover:border-slate-400"}`}
             >
               <SentimentIcon value={s} className="h-3.5 w-3.5" />
               {SENTIMENT_META[s].label} {count(s)}
@@ -190,6 +190,18 @@ export default function InboxPage() {
               ))}
             </ul>
           )}
+          <dl className="mt-5 grid max-w-md grid-cols-3 divide-x rounded-lg border">
+            {[
+              ["Esperan tu respuesta", conversations.filter((c) => c.sentiment !== "spam" && awaitsReply(c)).length],
+              ["Con una persona", conversations.filter((c) => c.sentiment !== "spam" && c.ai_paused).length],
+              ["Atiende la IA", conversations.filter((c) => c.sentiment !== "spam" && !c.ai_paused).length],
+            ].map(([label, n]) => (
+              <div key={label} className="px-3 py-2.5">
+                <dd className="text-xl font-semibold tabular-nums">{n}</dd>
+                <dt className="text-xs text-slate-600">{label}</dt>
+              </div>
+            ))}
+          </dl>
           <p className="mt-4 text-xs text-slate-600">Consejo: usa ↑ ↓ para moverte entre chats.</p>
         </div>
       )}
