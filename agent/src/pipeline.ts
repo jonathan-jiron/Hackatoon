@@ -139,9 +139,13 @@ export async function handleMessage(msg: Incoming): Promise<Outgoing> {
     console.error("pipeline failed", e);
   }
 
+  // The model registers the interest; the contact button is added here so it never depends on the model's wording.
+  const readyToClose = toolLog.some((t: any) => t.name === "update_lead_stage" && t.args?.stage === "ready_to_close" && t.result?.ok);
+  const buttons: Button[][] | undefined = readyToClose ? [[{ label: "👩‍🏫 Contactar con el docente", data: "contact:human" }]] : undefined;
+
   await save(conv.id, "assistant", reply, "text", toolLog.length ? toolLog : undefined);
   await db.query("update conversations set last_message_at = now() where id = $1", [conv.id]);
   const paused = (await db.query("select ai_paused from conversations where id = $1", [conv.id])).rows[0].ai_paused;
   refreshSummary(conv).catch((e) => console.error("summary failed", e));
-  return { reply, paused, conversationId: conv.id };
+  return { reply, buttons, paused, conversationId: conv.id };
 }

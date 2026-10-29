@@ -107,6 +107,7 @@ export async function route({ contact, conv, text = "", action }: RouteInput): P
   }
 
   if (!action && isInjection(text)) {
+    await db.query("update conversations set sentiment = 'spam' where id = $1 and stage in ('new', 'interested')", [conv.id]);
     return {
       text: "No puedo ayudarte con eso. Solo puedo responder sobre los cursos del CTT-FISEI: fechas, precios, contenidos, horarios e inscripción. ¿Qué curso te interesa?",
       buttons: mainMenu().buttons,
@@ -118,6 +119,22 @@ export async function route({ contact, conv, text = "", action }: RouteInput): P
 
   if (action?.startsWith("course:")) return selectCourse(action.slice(7), courses, contact.id, conv.id);
   if (action === "menu:main" || ["/start", "/menu", "menu", "inicio"].includes(t)) return mainMenu();
+  if (action === "contact:human") {
+    // The enrollment step: interest is already registered as a lead; the button hands the chat to a person.
+    const { rows } = await db.query(
+      "select co.title from conversations c left join courses co on co.id = c.focus_course_id where c.id = $1",
+      [conv.id],
+    );
+    const title = rows[0]?.title;
+    await db.query(
+      `update conversations set ai_paused = true, paused_by = 'user_request', stage = 'ready_to_close', sentiment = 'hot_lead',
+         summary = coalesce(summary || chr(10), '') || $2 where id = $1`,
+      [conv.id, `[Handoff] Quiere inscribirse${title ? ` en ${title}` : ""}: pidió contactar con el docente.`],
+    );
+    return {
+      text: `Listo, registré tu interés${title ? ` en ${title}` : ""}. Pronto un asesor se contactará contigo por este chat.`,
+    };
+  }
   if (action === "menu:human") {
     await db.query(
       "update conversations set ai_paused = true, paused_by = 'user_request', summary = coalesce(summary || chr(10), '') || $2 where id = $1",
@@ -152,6 +169,8 @@ async function selectCourse(slug: string, courses: CourseRow[], contactId: strin
   await setFocus(conversationId, c.id);
   await db.query("insert into leads (contact_id, course_id, stage) values ($1,$2,'interested') on conflict (contact_id, course_id) do nothing", [contactId, c.id]);
   await db.query("update conversations set stage = 'interested' where id = $1 and stage = 'new'", [conversationId]);
+  // Picking a course is a related action: it clears a spam mark from an earlier off-topic message.
+  await db.query("update conversations set sentiment = 'interested' where id = $1 and sentiment = 'spam'", [conversationId]);
   return courseCard(c);
 }
 
