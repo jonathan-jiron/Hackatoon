@@ -1,4 +1,4 @@
-export type Sentiment = "interested" | "doubtful" | "frustrated" | "hot_lead";
+export type Sentiment = "interested" | "doubtful" | "frustrated" | "hot_lead" | "spam";
 export type Role = "user" | "assistant" | "operator";
 export type LeadStage =
   | "new"
@@ -37,6 +37,7 @@ export interface Conversation {
   paused_by: string | null;
   summary: string | null;
   last_message_at: string;
+  first_message_at?: string | null;
   contact: Contact | null;
   last_message?: { content: string; role: Role } | null;
 }

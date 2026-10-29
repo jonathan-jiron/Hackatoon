@@ -19,6 +19,7 @@ interface Store {
   takeOver: (id: string) => Promise<void>;
   resume: (id: string) => Promise<void>;
   sendOperator: (id: string, text: string) => Promise<void>;
+  markEnrolled: (id: string) => Promise<void>;
 }
 
 const Ctx = createContext<Store | null>(null);
@@ -199,9 +200,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     [demo, patchConversation, pushMessage, callApi, loadMessages]
   );
 
+  const markEnrolled = useCallback(
+    async (id: string) => {
+      const contactId = convRef.current.find((c) => c.id === id)?.contact_id;
+      if (!demo) await callApi({ action: "enroll", conversation_id: id });
+      patchConversation(id, { stage: "enrolled" });
+      setLeads((ls) => ls.map((l) => (l.contact_id === contactId && (l.stage === "asked_enroll" || l.stage === "ready_to_close") ? { ...l, stage: "enrolled" } : l)));
+    },
+    [demo, patchConversation, callApi]
+  );
+
   const value = useMemo<Store>(
-    () => ({ status, updatedAt, conversations, messages, leads, courses, selectedId, select: setSelectedId, loadMessages, takeOver, resume, sendOperator }),
-    [status, updatedAt, conversations, messages, leads, courses, selectedId, loadMessages, takeOver, resume, sendOperator]
+    () => ({ status, updatedAt, conversations, messages, leads, courses, selectedId, select: setSelectedId, loadMessages, takeOver, resume, sendOperator, markEnrolled }),
+    [status, updatedAt, conversations, messages, leads, courses, selectedId, loadMessages, takeOver, resume, sendOperator, markEnrolled]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

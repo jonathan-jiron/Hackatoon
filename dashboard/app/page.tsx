@@ -19,7 +19,8 @@ export default function InboxPage() {
   const visible = useMemo(
     () =>
       conversations
-        .filter((c) => (filter === "all" ? true : c.sentiment === filter))
+        // Off-topic chats stay out of the main view: they are neither interest nor urgency.
+        .filter((c) => (filter === "all" ? c.sentiment !== "spam" : c.sentiment === filter))
         .filter((c) => (c.contact?.name ?? "").toLowerCase().includes(q.trim().toLowerCase()))
         .sort((a, b) => b.last_message_at.localeCompare(a.last_message_at)),
     [conversations, filter, q]
@@ -51,6 +52,8 @@ export default function InboxPage() {
   }, [flat, selectedId, select]);
 
   const count = (s: Sentiment) => conversations.filter((c) => c.sentiment === s).length;
+  const real = conversations.filter((c) => c.sentiment !== "spam").length;
+  const spamHidden = filter === "all" ? conversations.filter((c) => c.sentiment === "spam" && (c.contact?.name ?? "").toLowerCase().includes(q.trim().toLowerCase())) : [];
 
   const group = (title: string, hint: string, items: Conversation[]) =>
     items.length > 0 && (
@@ -70,7 +73,7 @@ export default function InboxPage() {
       <aside className={`min-w-0 space-y-3 ${selectedId ? "hidden md:block" : ""}`}>
         <div className="flex items-baseline justify-between">
           <h1 className="text-lg font-semibold">Conversaciones</h1>
-          <span className="text-sm text-slate-600">{conversations.length} en total</span>
+          <span className="text-sm text-slate-600">{real} en total</span>
         </div>
 
         <div className="relative">
@@ -119,9 +122,22 @@ export default function InboxPage() {
             [0, 1, 2].map((i) => <div key={i} className="h-24 animate-pulse rounded-xl bg-slate-200/70" />)}
 
           {group("Necesitan atención", "Quieren inscribirse o están molestos. Responde primero a estos.", urgent)}
-          {group("En conversación", "La IA los atiende sin problema.", rest)}
+          {group(filter === "spam" ? "Fuera de tema" : "En conversación", "La IA los atiende sin problema.", rest)}
 
-          {status !== "loading" && visible.length === 0 && (
+          {spamHidden.length > 0 && (
+            <details className="group rounded-xl border border-dashed bg-white/60 px-3 py-2">
+              <summary className="cursor-pointer list-none text-sm text-slate-600 hover:text-ink">
+                Fuera de tema · {spamHidden.length} <span className="text-xs">(no cuentan como interés)</span>
+              </summary>
+              <div className="mt-2 space-y-2">
+                {spamHidden.map((c) => (
+                  <ConversationCard key={c.id} conv={c} active={c.id === selectedId} onClick={() => select(c.id)} />
+                ))}
+              </div>
+            </details>
+          )}
+
+          {status !== "loading" && visible.length === 0 && spamHidden.length === 0 && (
             <div className="rounded-xl border border-dashed bg-white p-6 text-center text-sm text-slate-600">
               {conversations.length === 0 ? (
                 <>

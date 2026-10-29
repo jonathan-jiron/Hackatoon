@@ -26,7 +26,7 @@ const roleLabel = { user: "", assistant: "IA · ", operator: "Tú · " } as cons
 const plain = (s: string) => s.replace(/\*\*(.+?)\*\*/g, "$1").replace(/^#+\s*/gm, "");
 
 export default function Transcript({ id }: { id: string }) {
-  const { conversations, messages, leads, loadMessages, takeOver, resume, sendOperator, select } = useStore();
+  const { conversations, messages, leads, loadMessages, takeOver, resume, sendOperator, markEnrolled, select } = useStore();
   const toast = useToast();
   const conv = conversations.find((c) => c.id === id);
   const list = messages[id] ?? [];
@@ -85,6 +85,7 @@ export default function Transcript({ id }: { id: string }) {
   };
 
   const paused = conv.ai_paused;
+  const closing = leads.some((l) => l.contact_id === conv.contact_id && (l.stage === "asked_enroll" || l.stage === "ready_to_close"));
 
   return (
     <section aria-label={`Chat con ${conv.contact?.name ?? "contacto"}`} className="flex h-[calc(100vh-110px)] min-h-[480px] flex-col overflow-hidden rounded-xl border bg-white md:h-[calc(100vh-150px)]">
@@ -102,8 +103,19 @@ export default function Transcript({ id }: { id: string }) {
               .join(" · ")}
           </p>
         </div>
-        <div className="hidden sm:block">
+        <div className="hidden items-center gap-2 sm:flex">
           <SentimentBadge value={conv.sentiment} />
+          {closing && (
+            <button
+              onClick={async () => {
+                await markEnrolled(id);
+                toast("Venta registrada: la persona quedó como inscrita.");
+              }}
+              className="rounded-md border bg-white px-3 py-1.5 text-sm font-medium hover:border-slate-400"
+            >
+              Marcar inscrito
+            </button>
+          )}
         </div>
       </header>
 

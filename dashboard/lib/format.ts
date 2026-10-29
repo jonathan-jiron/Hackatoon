@@ -55,9 +55,13 @@ export const SENTIMENT_META: Record<
     label: "Listo para comprar", hint: "Quiere inscribirse. Es buen momento para cerrar.",
     dot: "bg-orange-600", text: "text-orange-800", bg: "bg-orange-50", bar: "w-full bg-orange-600", ring: "ring-orange-200",
   },
+  spam: {
+    label: "Fuera de tema", hint: "Preguntó algo que no tiene que ver con los cursos. No cuenta como interés.",
+    dot: "bg-slate-400", text: "text-slate-700", bg: "bg-slate-100", bar: "w-1/5 bg-slate-400", ring: "ring-slate-200",
+  },
 };
 
-export const SENTIMENT_ORDER: Sentiment[] = ["hot_lead", "frustrated", "doubtful", "interested"];
+export const SENTIMENT_ORDER: Sentiment[] = ["hot_lead", "frustrated", "doubtful", "interested", "spam"];
 
 export const STAGE_LABEL: Record<string, string> = {
   new: "Nuevo",

@@ -29,6 +29,7 @@ export async function getSnapshot(): Promise<Snapshot> {
       select c.id, c.contact_id, c.status, c.stage,
              coalesce(c.sentiment, 'interested') as sentiment,
              c.ai_paused, c.paused_by, c.summary, c.last_message_at,
+             (select min(m.created_at) from messages m where m.conversation_id = c.id) as first_message_at,
              json_build_object('id', ct.id, 'channel', ct.channel, 'channel_user_id', ct.channel_user_id,
                                'name', ct.name, 'audience_type', ct.audience_type) as contact,
              lm.content as lm_content, lm.role as lm_role

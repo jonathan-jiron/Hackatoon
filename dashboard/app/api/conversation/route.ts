@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 type Body =
-  | { action: "takeover" | "resume"; conversation_id: string }
+  | { action: "takeover" | "resume" | "enroll"; conversation_id: string }
   | { action: "send"; conversation_id: string; text: string };
 
 const UUID = /^[0-9a-f-]{36}$/i;
@@ -26,6 +26,18 @@ export async function POST(req: NextRequest) {
 
   if (body.action === "resume") {
     await pool.query("update conversations set ai_paused = false, paused_by = null where id = $1", [id]);
+    return NextResponse.json({ ok: true });
+  }
+
+  if (body.action === "enroll") {
+    // The operator confirms the sale: every lead of this contact that was at the closing step becomes enrolled.
+    await pool.query(
+      `update leads set stage = 'enrolled', updated_at = now()
+       where contact_id = (select contact_id from conversations where id = $1)
+         and stage in ('asked_enroll', 'ready_to_close')`,
+      [id]
+    );
+    await pool.query("update conversations set stage = 'enrolled' where id = $1", [id]);
     return NextResponse.json({ ok: true });
   }
 

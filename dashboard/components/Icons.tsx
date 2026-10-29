@@ -71,11 +71,19 @@ export const ArrowLeftIcon = (p: IconProps) => (
 
 export const HelpIcon = (p: IconProps) => <QuestionIcon {...p} />;
 
+export const BanIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M5.6 5.6l12.8 12.8" />
+  </Svg>
+);
+
 const bySentiment: Record<Sentiment, (p: IconProps) => JSX.Element> = {
   interested: SmileIcon,
   doubtful: QuestionIcon,
   frustrated: FrownIcon,
   hot_lead: FlameIcon,
+  spam: BanIcon,
 };
 
 export function SentimentIcon({ value, className }: { value: Sentiment } & IconProps) {
