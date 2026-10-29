@@ -23,8 +23,10 @@ async function post(model: string, method: string, body: unknown) {
 }
 
 export class GeminiError extends Error {
-  constructor(public status: number, message: string) {
+  status: number;
+  constructor(status: number, message: string) {
     super(message);
+    this.status = status;
   }
 }
 
