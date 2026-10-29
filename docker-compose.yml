@@ -28,8 +28,15 @@ services:
     environment:
       GENERIC_TIMEZONE: America/Guayaquil
       WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://localhost:5678/}
+      # Workflows read secrets from env instead of storing them in n8n credentials.
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET}
+      AGENT_API_KEY: ${AGENT_API_KEY}
+      AGENT_URL: ${AGENT_URL:-http://host.docker.internal:3001}
     volumes:
       - n8n_data:/home/node/.n8n
+      - ./n8n/workflows:/workflows:ro
 
 volumes:
   db_data:
