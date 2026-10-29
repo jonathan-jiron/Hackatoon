@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-paper font-sans text-ink antialiased;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* Heuristic 7 and accessibility: keyboard focus is always visible. */
+:focus-visible {
+  outline: 2px solid #3355e8;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.toast-in { animation: toast-in 180ms ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
