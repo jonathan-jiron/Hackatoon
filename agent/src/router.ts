@@ -23,7 +23,18 @@ export interface CourseRow {
 export const normalize = (s: string) =>
   s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9/ ]+/g, " ").replace(/\s+/g, " ").trim();
 
-const wordCount = (s: string) => (s ? s.split(" ").length : 0);
+// Obvious attempts to rewrite the bot's rules or extract its prompt: refused here, without spending a model call.
+const INJECTION = [
+  /\b(ignora|ignore|olvida|forget|disregard)\b.{0,40}\b(instrucciones|reglas|indicaciones|instructions|rules|prompt)\b/,
+  /\b(prompt|instrucciones|reglas)\b.{0,25}\b(sistema|system|internas?|ocultas?|iniciales?)\b/,
+  /\b(system|developer)\s*(prompt|message)\b/,
+  /\b(modo|mode)\s+(desarrollador|developer|dios|god|admin)\b|\bjailbreak\b|\bdan\b/,
+  /\b(actua|finge|pretende|comportate|act|pretend)\s+(como|que|as|like)\b/,
+  /\b(muestra|revela|repite|dime|show|reveal|repeat)\b.{0,30}\b(tu|tus|your)\b.{0,15}\b(prompt|instrucciones|reglas|instructions)\b/,
+];
+export const isInjection = (text: string) => INJECTION.some((re) => re.test(normalize(text)));
+
+const wordCount =(s: string) => (s ? s.split(" ").length : 0);
 // Words shared by many titles say nothing about which course the user means.
 const GENERIC = new Set(["preparacion", "fundamentos", "certified", "certificate", "program", "associate", "curso", "para", "de", "la", "el", "en"]);
 
@@ -93,6 +104,13 @@ export async function route({ contact, conv, text = "", action }: RouteInput): P
     }
     // The model never runs before consent.
     return consentPrompt(contact.name);
+  }
+
+  if (!action && isInjection(text)) {
+    return {
+      text: "No puedo ayudarte con eso. Solo puedo responder sobre los cursos del CTT-FISEI: fechas, precios, contenidos, horarios e inscripción. ¿Qué curso te interesa?",
+      buttons: mainMenu().buttons,
+    };
   }
 
   const t = normalize(text);
