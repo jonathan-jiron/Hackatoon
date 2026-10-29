@@ -1,0 +1,13 @@
+{
+  "name": "ctt-agent",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file=../.env src/server.ts",
+    "chat": "node --env-file=../.env src/chat-cli.ts",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "pg": "8.13.1"
+  }
+}
