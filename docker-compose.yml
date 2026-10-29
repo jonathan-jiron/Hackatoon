@@ -1,0 +1,36 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ctt
+    ports:
+      - "54322:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      # Local-only shim for Supabase roles/schemas, then the real migrations in order.
+      - ./supabase/local-init.sql:/docker-entrypoint-initdb.d/00-local-init.sql:ro
+      - ./supabase/migrations:/docker-entrypoint-initdb.d/migrations:ro
+      - ./supabase/run-migrations.sh:/docker-entrypoint-initdb.d/10-run-migrations.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ctt"]
+      interval: 5s
+      retries: 10
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "5678:5678"
+    environment:
+      GENERIC_TIMEZONE: America/Guayaquil
+      WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://localhost:5678/}
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+volumes:
+  db_data:
+  n8n_data:
