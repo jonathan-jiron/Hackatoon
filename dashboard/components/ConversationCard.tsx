@@ -28,10 +28,9 @@ export default function ConversationCard({ conv, active, onClick }: { conv: Conv
         <Thermometer value={conv.sentiment} />
         <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
           <SentimentBadge value={conv.sentiment} />
-          {conv.ai_paused ? (
+          {/* The AI answering is the normal state and stays unmarked; only a person in control is flagged. */}
+          {conv.ai_paused && (
             <span className="shrink-0 whitespace-nowrap rounded-full bg-ink px-2 py-0.5 text-xs font-medium text-white">Atiende una persona</span>
-          ) : (
-            <span className="shrink-0 whitespace-nowrap rounded-full bg-brand-soft px-2 py-0.5 text-xs font-medium text-brand-dark">Atiende la IA</span>
           )}
         </div>
       </div>

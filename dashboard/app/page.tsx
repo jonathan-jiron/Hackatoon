@@ -56,8 +56,7 @@ export default function InboxPage() {
     items.length > 0 && (
       <section aria-label={title} className="space-y-2">
         <div>
-          <h2 className="text-sm font-semibold">{title}</h2>
-          <p className="text-xs text-slate-600">{hint}</p>
+          <h2 className="text-sm font-semibold" title={hint}>{title}</h2>
         </div>
         {items.map((c) => (
           <ConversationCard key={c.id} conv={c} active={c.id === selectedId} onClick={() => select(c.id)} />
@@ -100,7 +99,8 @@ export default function InboxPage() {
           >
             Todos
           </button>
-          {SENTIMENT_ORDER.map((s) => (
+          {/* Filters with nothing behind them are noise; the active one always stays. */}
+          {SENTIMENT_ORDER.filter((s) => count(s) > 0 || filter === s).map((s) => (
             <button
               key={s}
               onClick={() => setFilter(filter === s ? "all" : s)}

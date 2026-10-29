@@ -58,9 +58,9 @@ export async function POST(req: NextRequest) {
             text,
           }),
         });
-        if (!r.ok) return new NextResponse("n8n webhook failed", { status: 502 });
+        if (!r.ok) return new NextResponse(r.status === 403 ? "clave del webhook incorrecta" : "el canal rechazó el mensaje, ¿el contacto es un chat real?", { status: 502 });
       } catch {
-        return new NextResponse("n8n webhook unreachable", { status: 502 });
+        return new NextResponse("n8n no responde", { status: 502 });
       }
     }
 
