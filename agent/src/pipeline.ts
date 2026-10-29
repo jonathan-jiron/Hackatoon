@@ -10,6 +10,10 @@ const SUMMARY_EVERY = 10;
 const MAX_TOOL_ROUNDS = 6;
 const FALLBACK = "Disculpa, tengo un inconveniente técnico momentáneo. ¿Puedes escribirme de nuevo en unos minutos? Si es urgente, escribe a talleresfisei@uta.edu.ec.";
 
+/** Telegram gets plain text; the model sometimes ignores the prompt and emits Markdown. */
+export const plainText = (s: string) =>
+  s.replace(/\*\*(.+?)\*\*/gs, "$1").replace(/__(.+?)__/gs, "$1").replace(/^#{1,6}\s+/gm, "").replace(/`([^`]+)`/g, "$1").trim();
+
 export interface Incoming {
   channel: "telegram" | "whatsapp";
   channelUserId: string;
@@ -118,7 +122,7 @@ export async function handleMessage(msg: Incoming): Promise<Outgoing> {
       const turn = await generate({ system, contents, tools: toolDeclarations });
       const calls = turn.parts.filter((p) => p.functionCall);
       if (!calls.length) {
-        reply = turn.parts.map((p) => p.text ?? "").join("").trim() || FALLBACK;
+        reply = plainText(turn.parts.map((p) => p.text ?? "").join("")) || FALLBACK;
         break;
       }
       contents.push(turn);
