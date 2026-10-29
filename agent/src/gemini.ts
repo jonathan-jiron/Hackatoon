@@ -14,13 +14,22 @@ async function post(model: string, method: string, body: unknown) {
       body: JSON.stringify(body),
     });
     if (res.ok) return res.json();
-    if ((res.status === 429 || res.status >= 500) && attempt < 4) {
+    if (res.status >= 500 && attempt < 3) {
       await new Promise((r) => setTimeout(r, 1500 * 2 ** attempt));
       continue;
     }
-    throw new Error(`Gemini ${method} failed: ${res.status} ${await res.text()}`);
+    throw new GeminiError(res.status, `Gemini ${method} failed: ${res.status} ${await res.text()}`);
   }
 }
+
+export class GeminiError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+  }
+}
+
+/** Primary model first, then GEMINI_FALLBACK_MODELS (comma separated). Free tier quotas are per model. */
+const chatModels = () => [need("GEMINI_CHAT_MODEL"), ...(process.env.GEMINI_FALLBACK_MODELS ?? "").split(",").map((m) => m.trim()).filter(Boolean)];
 
 export interface Part {
   text?: string;
@@ -34,12 +43,24 @@ export interface Content {
 }
 
 export async function generate(opts: { system: string; contents: Content[]; tools?: unknown[] }): Promise<Content> {
-  const json = await post(need("GEMINI_CHAT_MODEL"), "generateContent", {
+  const body = {
     systemInstruction: { parts: [{ text: opts.system }] },
     contents: opts.contents,
     tools: opts.tools ? [{ functionDeclarations: opts.tools }] : undefined,
     generationConfig: { temperature: 0.6 },
-  });
+  };
+  let json: any;
+  const models = chatModels();
+  for (const [i, model] of models.entries()) {
+    try {
+      json = await post(model, "generateContent", body);
+      break;
+    } catch (e) {
+      const quota = e instanceof GeminiError && (e.status === 429 || e.status === 404);
+      if (!quota || i === models.length - 1) throw e;
+      console.warn(`model ${model} unavailable (${(e as GeminiError).status}), trying next`);
+    }
+  }
   const content = json.candidates?.[0]?.content as Content | undefined;
   if (!content) throw new Error(`Gemini returned no content: ${JSON.stringify(json.promptFeedback ?? json)}`);
   return { role: "model", parts: content.parts ?? [] };

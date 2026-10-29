@@ -7,7 +7,7 @@ const SYSTEM = readFileSync(new URL("../prompts/system.md", import.meta.url), "u
 const HISTORY_LIMIT = 10;
 const SUMMARY_EVERY = 10;
 const MAX_TOOL_ROUNDS = 6;
-const FALLBACK = "Disculpa, tuve un inconveniente técnico. Te paso con una persona del equipo para que te ayude. Puedes escribir a talleresfisei@uta.edu.ec.";
+const FALLBACK = "Disculpa, tengo un inconveniente técnico momentáneo. ¿Puedes escribirme de nuevo en unos minutos? Si es urgente, escribe a talleresfisei@uta.edu.ec.";
 
 export interface Incoming {
   channel: "telegram" | "whatsapp";
@@ -108,8 +108,8 @@ export async function handleMessage(msg: Incoming): Promise<Outgoing> {
       contents.push({ role: "user", parts: responses });
     }
   } catch (e) {
+    // Do not pause the chat: an LLM outage is not a reason to lock the user out of the bot.
     console.error("pipeline failed", e);
-    await runTool("handoff_to_human", { reason: "Agent error, needs a human." }, ctx);
   }
 
   await save(conv.id, "assistant", reply, "text", toolLog.length ? toolLog : undefined);
