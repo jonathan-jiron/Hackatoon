@@ -1,4 +1,5 @@
 {
+  "id": "WaHg39lgqwBWAUl1",
   "name": "Telegram adapter",
   "nodes": [
     {
@@ -11,18 +12,42 @@
     },
     {
       "parameters": {
+        "jsCode": "// Telegram-specific parsing lives only here: text messages and button presses become one neutral shape.\nconst { headers, body } = $input.first().json;\nconst cb = body.callback_query;\nconst msg = cb ? cb.message : body.message;\nconst from = cb ? cb.from : body.message?.from;\nconst text = cb ? undefined : body.message?.text;\nconst action = cb ? cb.data : undefined;\nconst authentic = headers['x-telegram-bot-api-secret-token'] === $env.TELEGRAM_WEBHOOK_SECRET;\nreturn [{ json: {\n  valid: authentic && !!msg && !!from && (!!text || !!action),\n  chatId: msg?.chat?.id,\n  userId: String(from?.id),\n  name: from?.first_name,\n  text,\n  action,\n  callbackId: cb?.id ?? '',\n} }];"
+      },
+      "name": "Normalize update",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
         "conditions": {
           "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
           "conditions": [
             {
-              "id": "secret",
-              "leftValue": "={{ $json.headers['x-telegram-bot-api-secret-token'] }}",
-              "rightValue": "={{ $env.TELEGRAM_WEBHOOK_SECRET }}",
-              "operator": { "type": "string", "operation": "equals" }
-            },
+              "id": "valid",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": "",
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "Authentic and supported?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
             {
-              "id": "has-text",
-              "leftValue": "={{ $json.body.message?.text }}",
+              "id": "is-callback",
+              "leftValue": "={{ $json.callbackId }}",
               "rightValue": "",
               "operator": { "type": "string", "operation": "notEmpty", "singleValue": true }
             }
@@ -31,10 +56,24 @@
         },
         "options": {}
       },
-      "name": "Authentic text message?",
+      "name": "Button press?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [220, 0]
+      "position": [660, 120]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/answerCallbackQuery",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ callback_query_id: $json.callbackId }) }}",
+        "options": {}
+      },
+      "name": "Stop button spinner",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 60]
     },
     {
       "parameters": {
@@ -44,13 +83,13 @@
         "headerParameters": { "parameters": [{ "name": "x-agent-key", "value": "={{ $env.AGENT_API_KEY }}" }] },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ channel: 'telegram', channelUserId: String($('Telegram webhook').item.json.body.message.from.id), name: $('Telegram webhook').item.json.body.message.from.first_name, text: $('Telegram webhook').item.json.body.message.text }) }}",
+        "jsonBody": "={{ JSON.stringify({ channel: 'telegram', channelUserId: $json.userId, name: $json.name, text: $json.text, action: $json.action }) }}",
         "options": { "timeout": 90000 }
       },
       "name": "Ask agent",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [440, -100]
+      "position": [660, -100]
     },
     {
       "parameters": {
@@ -71,7 +110,7 @@
       "name": "Agent replied?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [660, -100]
+      "position": [880, -100]
     },
     {
       "parameters": {
@@ -79,18 +118,25 @@
         "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ chat_id: $('Telegram webhook').item.json.body.message.chat.id, text: $json.reply }) }}",
+        "jsonBody": "={{ JSON.stringify({ chat_id: $('Normalize update').item.json.chatId, text: $json.reply, reply_markup: $json.buttons ? { inline_keyboard: $json.buttons.map(r => r.map(b => ({ text: b.label, callback_data: b.data }))) } : undefined }) }}",
         "options": {}
       },
       "name": "Send to Telegram",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [880, -200]
+      "position": [1100, -200]
     }
   ],
   "connections": {
-    "Telegram webhook": { "main": [[{ "node": "Authentic text message?", "type": "main", "index": 0 }]] },
-    "Authentic text message?": { "main": [[{ "node": "Ask agent", "type": "main", "index": 0 }], []] },
+    "Telegram webhook": { "main": [[{ "node": "Normalize update", "type": "main", "index": 0 }]] },
+    "Normalize update": { "main": [[{ "node": "Authentic and supported?", "type": "main", "index": 0 }]] },
+    "Authentic and supported?": {
+      "main": [
+        [{ "node": "Ask agent", "type": "main", "index": 0 }, { "node": "Button press?", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Button press?": { "main": [[{ "node": "Stop button spinner", "type": "main", "index": 0 }], []] },
     "Ask agent": { "main": [[{ "node": "Agent replied?", "type": "main", "index": 0 }]] },
     "Agent replied?": { "main": [[{ "node": "Send to Telegram", "type": "main", "index": 0 }], []] }
   },

@@ -15,7 +15,7 @@ createServer(async (req, res) => {
     let raw = "";
     for await (const chunk of req) raw += chunk;
     const msg = JSON.parse(raw) as Incoming;
-    if (!msg.channel || !msg.channelUserId || typeof msg.text !== "string") return send(400, { error: "invalid body" });
+    if (!msg.channel || !msg.channelUserId || (typeof msg.text !== "string" && typeof msg.action !== "string")) return send(400, { error: "invalid body" });
     send(200, await handleMessage(msg));
   } catch (e) {
     console.error(e);

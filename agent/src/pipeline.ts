@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { db } from "./db.ts";
 import { generate, type Content } from "./gemini.ts";
+import { route, type Button } from "./router.ts";
 import { runTool, toolDeclarations, type ToolContext } from "./tools.ts";
 
 const SYSTEM = readFileSync(new URL("../prompts/system.md", import.meta.url), "utf8");
@@ -13,11 +14,15 @@ export interface Incoming {
   channel: "telegram" | "whatsapp";
   channelUserId: string;
   name?: string;
-  text: string;
+  /** Free text typed by the user. */
+  text?: string;
+  /** Callback data of a pressed button (e.g. "menu:courses", "course:curso20"). */
+  action?: string;
   mediaType?: "text" | "audio";
 }
 export interface Outgoing {
   reply: string | null;
+  buttons?: Button[][];
   paused: boolean;
   conversationId: string;
 }
@@ -65,6 +70,13 @@ function stateBlock(contact: any, conv: any) {
   ].filter(Boolean).join("\n");
 }
 
+async function focusBlock(conv: any) {
+  if (!conv.focus_course_id) return "";
+  const { rows } = await db.query("select slug, title, start_date, hours, modality from open_courses where id = $1", [conv.focus_course_id]);
+  const c = rows[0];
+  return c ? `Focus course (the user picked it; answer about it by default, use get_course for price and details): slug=${c.slug}, title=${c.title}` : "";
+}
+
 async function refreshSummary(conv: any) {
   const { rows } = await db.query("select count(*)::int n from messages where conversation_id = $1", [conv.id]);
   if (rows[0].n % SUMMARY_EVERY !== 0) return;
@@ -79,18 +91,29 @@ async function refreshSummary(conv: any) {
 
 export async function handleMessage(msg: Incoming): Promise<Outgoing> {
   const { contact, conv } = await loadConversation(msg);
-  await save(conv.id, "user", msg.text, msg.mediaType);
+  await save(conv.id, "user", msg.text ?? `[botón] ${msg.action}`, msg.mediaType);
   await db.query("update conversations set last_message_at = now() where id = $1", [conv.id]);
 
-  // Handover: while an operator (or the AI itself) paused the chat, the model never runs.
+  // Handover: while an operator (or the AI itself) paused the chat, nothing runs.
   if (conv.ai_paused) return { reply: null, paused: true, conversationId: conv.id };
+
+  // Menu, consent and course picking are answered without the model.
+  const routed = await route({ contact, conv, text: msg.text, action: msg.action });
+  if (routed) {
+    await save(conv.id, "assistant", routed.text);
+    await db.query("update conversations set last_message_at = now() where id = $1", [conv.id]);
+    const paused = (await db.query("select ai_paused from conversations where id = $1", [conv.id])).rows[0].ai_paused;
+    return { reply: routed.text, buttons: routed.buttons, paused, conversationId: conv.id };
+  }
+  // The router may have just set the focus course.
+  conv.focus_course_id = (await db.query("select focus_course_id from conversations where id = $1", [conv.id])).rows[0].focus_course_id;
 
   const ctx: ToolContext = { contactId: contact.id, conversationId: conv.id };
   const toolLog: unknown[] = [];
   let reply = FALLBACK;
   try {
     const contents = await history(conv.id);
-    const system = `${SYSTEM}\n\n# Current state\n${stateBlock(contact, conv)}`;
+    const system = `${SYSTEM}\n\n# Current state\n${stateBlock(contact, conv)}\n${await focusBlock(conv)}`;
     for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
       const turn = await generate({ system, contents, tools: toolDeclarations });
       const calls = turn.parts.filter((p) => p.functionCall);
